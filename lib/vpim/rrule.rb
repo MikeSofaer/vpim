@@ -520,6 +520,22 @@ module Vpim
       end
       week
     end
+	
+	def to_s(strftime_options = {})
+      strftime_options[:date] = strftime_options[:date] || "%A"
+      return "daily" if @freq == "DAILY"
+      if @freq == "WEEKLY"
+        if @by['BYDAY']
+          return @by['BYDAY']
+        else
+          return @dtstart.strftime(strftime_options[:date]) + "s"
+        end
+      end
+      return nil
+    end
+    def weekly?
+      @freq == "WEEKLY"
+    end
 
     # Help encode an RRULE value.
     #

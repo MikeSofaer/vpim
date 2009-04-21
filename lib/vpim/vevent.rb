@@ -130,6 +130,32 @@ module Vpim
       def dtend
         propend 'DTEND'
       end
+	  
+	  def to_s(strftime_options = {})
+        strftime_options[:time] = strftime_options[:time] || "%I:%M%p"
+        strftime_options[:date] = strftime_options[:date] || "%A, %B %d"
+        time_i = dtstart.strftime(strftime_options[:time])
+        time_f = dtend.strftime(strftime_options[:time])
+        date_i = dtstart.strftime(strftime_options[:date])
+        date_f = dtend.strftime(strftime_options[:date])
+
+        days_string = rrule.to_s
+        if days_string
+          return days_string + " from #{time_i} to #{time_f}, #{location}"
+        end
+        return date_i + " " + time_i + " to " + date_f + " " + time_f + ', ' +location
+      end
+      def weekly_ranges
+        return [] unless rrule.weekly?
+        ocs = occurences(dtstart + 7 * 24 * 3600)
+        ocs.map{|o| o .. o + duration}
+      end
+      def instances(options = {})
+        ranges = occurrences.map{|t| (t .. t + duration)}
+        ranges.reject!{|r| r.begin > options[:range].end or r.end < options[:range].begin} if options[:range]
+        ranges = ranges[0..options[:limit] -1] if options[:limit]
+        return ranges
+      end	  
 
       # Make a new Vevent, or make changes to an existing Vevent.
       class Maker

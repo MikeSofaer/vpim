@@ -165,6 +165,45 @@ ___
     # puts "Reply=>"
     # puts reply.to_s
   end
+  
+  def test_weekly_to_s
+    start = Time.local(2000,"jan",3,20,15,0)
+	event = Icalendar::Vevent.create(start,
+      'DTEND'    => start + 60 * 60,
+      'SUMMARY'  => "this is an event",
+      'RRULE'    =>  'freq=weekly;byday=mo,we,fr;count=5',
+	  'LOCATION' => 'Behind the tape deck'
+      )
+	assert_equal "MO,WE,FR", event.rrule.to_s
+	assert_equal "MO,WE,FR from 08:15PM to 09:15PM, Behind the tape deck", event.to_s
+  end
+  
+  def test_weekly_ranges
+    start = Time.local(2000,"jan",3,20,15,0)
+	event = Icalendar::Vevent.create(start,
+      'DTEND'    => start + 60 * 60,
+      'SUMMARY'  => "this is an event",
+      'RRULE'    =>  'freq=weekly;byday=mo,we,fr;count=50',
+	  'LOCATION' => 'Behind the tape deck'
+      )
+	day = 24 * 3600
+	expected = [start .. start + event.duration, start +2 * day .. start + 2*day + event.duration,  start +4 * day .. start + 4*day + event.duration]
+	assert_equal expected, event.weekly_ranges 
+  end
+  
+  def test_instances
+    start = Time.local(2000,"jan",3,20,15,0)
+	event = Icalendar::Vevent.create(start,
+      'DTEND'    => start + 60 * 60,
+      'SUMMARY'  => "this is an event",
+      'RRULE'    =>  'freq=weekly;byday=mo,we,fr;count=500',
+	  'LOCATION' => 'Behind the tape deck'
+      )
+	range = Time.local(2001,"jan",3,0,0,0) .. Time.local(2001,"jan",6,0,0,0)
+	expected = [Time.local(2001,"jan",3,20,15,0)..Time.local(2001,"jan",3,21,15,0),
+	Time.local(2001,"jan",5,20,15,0)..Time.local(2001,"jan",5,21,15,0)]
+	assert_equal expected, event.instances(:range => range)
+  end
 
   def test_hal1
     # Hal was encoding raw strings, here's how to do it with the API.
